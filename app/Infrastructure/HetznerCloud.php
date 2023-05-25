@@ -225,10 +225,14 @@ class HetznerCloud implements ServerProvider, HasCredentials
      */
     public function createServer(string $name, string $regionId, string $typeId, string $imageId, array|string|Collection $sshKeyIds): string
     {
+        $datacenter = $this->http->get(self::API_URL."datacenters/{$regionId}");
+
+        $locationId = $datacenter->json('datacenter.location.id');
+
         return (string) $this->http->post(self::API_URL.'servers', [
             'name' => $name,
             'server_type' => $typeId,
-            'location' => $regionId,
+            'location' => $locationId,
             'start_after_create' => true,
             'ssh_keys' => Collection::wrap($sshKeyIds)->map(fn ($sshKeyId) => (int) $sshKeyId)->unique()->values()->all(),
             'image' => $imageId,
