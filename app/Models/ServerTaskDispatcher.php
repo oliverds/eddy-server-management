@@ -175,7 +175,7 @@ class ServerTaskDispatcher
     /**
      * Dispatches the pending task.
      */
-    private function dispatchPendingTask(): ProcessOutput|null
+    private function dispatchPendingTask(): ?ProcessOutput
     {
         try {
             $processOutput = $this->pendingTask->dispatch();
@@ -210,12 +210,12 @@ class ServerTaskDispatcher
             throw new NoConnectionSelectedException;
         }
 
-        if ($this->keepTrack) {
+        if ($this->keepTrack || $this->pendingTask->task instanceof HasCallbacks) {
             return $this->dispatchAndKeepTrack();
         }
 
         if (! $this->pendingTask->getId()) {
-            $this->pendingTask->id((new TaskModel)->newUniqueId());
+            $this->pendingTask->id('task-'.(new TaskModel)->newUniqueId());
         }
 
         return tap($this->dispatchPendingTask(), function (ProcessOutput $output) {

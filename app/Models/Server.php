@@ -9,7 +9,6 @@ use App\Infrastructure\Entities\ServerStatus;
 use App\Infrastructure\Entities\ServerType;
 use App\Infrastructure\ProviderFactory;
 use App\Infrastructure\ServerProvider;
-use App\Jobs\AddServerSshKeyToGithub;
 use App\Jobs\CreateServerOnInfrastructure;
 use App\Jobs\ProvisionServer;
 use App\Jobs\WaitForServerToConnect;
@@ -60,6 +59,7 @@ class Server extends Model
     ];
 
     protected $casts = [
+        'add_github_ssh_key' => 'boolean',
         'completed_provision_steps' => AsArrayObject::class,
         'cpu_cores' => 'integer',
         'database_password' => 'encrypted',
@@ -171,19 +171,13 @@ class Server extends Model
         return $this;
     }
 
-   /**
-    * Returns a signed URL that containts the script to connect a custom server to the app.
-    */
-   public function provisionScriptUrl(): string
-   {
-       $host = rtrim(config('eddy.webhook_url') ?: config('app.url'), '/');
-
-       return $host.URL::signedRoute(
-           name: 'servers.provisionScript',
-           parameters: ['server' => $this],
-           absolute: false
-       );
-   }
+    /**
+     * Returns a signed URL that containts the script to connect a custom server to the app.
+     */
+    public function provisionScriptUrl(): string
+    {
+        return URL::relativeSignedRoute('servers.provision-script', ['server' => $this]);
+    }
 
     /**
      * A bash provision command used to start the provision of custom servers.
@@ -265,7 +259,7 @@ class Server extends Model
     /**
      * Dispatches a chain of jobs to provision the server.
      */
-    public function dispatchCreateAndProvisionJobs(Collection $sshKeys, Credentials $addSshKeyToGithub = null): void
+    public function dispatchCreateAndProvisionJobs(Collection $sshKeys): void
     {
         $server = $this->fresh();
 
@@ -274,10 +268,6 @@ class Server extends Model
             new WaitForServerToConnect($server),
             new ProvisionServer($server, EloquentCollection::make($sshKeys)),
         ];
-
-        if ($addSshKeyToGithub && $addSshKeyToGithub->exists) {
-            $jobs[] = new AddServerSshKeyToGithub($server, $addSshKeyToGithub->fresh());
-        }
 
         Bus::chain($jobs)->dispatch();
     }
@@ -343,6 +333,11 @@ class Server extends Model
         return $this->belongsTo(Credentials::class);
     }
 
+    public function githubCredentials(): BelongsTo
+    {
+        return $this->belongsTo(Credentials::class, 'github_credentials_id');
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(TaskModel::class);
@@ -351,6 +346,12 @@ class Server extends Model
     public function sites(): HasMany
     {
         return $this->hasMany(Site::class);
+    }
+
+    public function backups(): HasMany
+    {
+        return $this->hasMany(Backup::class)
+            ->orderBy((new Backup)->qualifyColumn('name'));
     }
 
     public function crons(): HasMany

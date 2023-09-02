@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Laravel\Jetstream\Events\TeamCreated;
 use Laravel\Jetstream\Events\TeamDeleted;
 use Laravel\Jetstream\Events\TeamUpdated;
@@ -45,6 +46,11 @@ class Team extends JetstreamTeam
         );
     }
 
+    public function backups(): HasManyThrough
+    {
+        return $this->hasManyThrough(Backup::class, Server::class);
+    }
+
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
@@ -62,7 +68,7 @@ class Team extends JetstreamTeam
     /**
      * Get the email address that should be associated with the Paddle customer.
      */
-    public function paddleEmail(): string|null
+    public function paddleEmail(): ?string
     {
         /** @var User */
         $owner = $this->owner;

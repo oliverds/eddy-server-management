@@ -8,6 +8,7 @@ use App\Models\Team;
 use App\Provider;
 use App\Server\Software;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Server>
@@ -89,12 +90,15 @@ class ServerFactory extends Factory
     public function provisioned()
     {
         return $this->state(function (array $attributes) {
+            $keyPair = Dummies::ed25519KeyPair();
+
             return [
                 'provider_id' => 1,
                 'public_ipv4' => '192.168.60.61',
                 'status' => ServerStatus::Running,
                 'installed_software' => Software::defaultStack(),
                 'provisioned_at' => now(),
+                'user_public_key' => $keyPair->publicKey,
             ];
         });
     }
@@ -106,5 +110,14 @@ class ServerFactory extends Factory
                 'team_id' => $team->id,
             ];
         });
+    }
+
+    public function withDatabases(int $count = 3): self
+    {
+        return $this->has(
+            DatabaseFactory::new()->count($count)->state(new Sequence(
+                fn (Sequence $sequence) => ['name' => 'my_database'.$sequence->index],
+            ))
+        );
     }
 }

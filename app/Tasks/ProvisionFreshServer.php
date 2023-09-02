@@ -5,6 +5,7 @@ namespace App\Tasks;
 use App\Enum;
 use App\Infrastructure\Entities\ServerStatus;
 use App\Jobs\CleanupFailedServerProvisioning;
+use App\Jobs\InstallTaskCleanupCron;
 use App\Jobs\UpdateUserPublicKey;
 use App\Mail\ServerProvisioned;
 use App\Models\FirewallRule;
@@ -48,6 +49,7 @@ class ProvisionFreshServer extends Task implements HasCallbacks
             'status' => ServerStatus::Running,
         ])->save();
 
+        dispatch(new InstallTaskCleanupCron($this->server));
         dispatch(new UpdateUserPublicKey($this->server));
 
         Mail::to($this->server->createdByUser)->queue(new ServerProvisioned($this->server));
@@ -55,9 +57,6 @@ class ProvisionFreshServer extends Task implements HasCallbacks
 
     protected function onCustomCallback(TaskModel $task, Request $request)
     {
-        info('Custom callback', array_keys($request->all()));
-        info('Custom callback', $request->all());
-
         $request->validate([
             'provision_step_completed' => ['nullable', Enum::rule(ProvisionStep::class)],
             'software_installed' => ['nullable', Enum::rule(Software::class)],
