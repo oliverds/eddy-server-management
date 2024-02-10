@@ -45,8 +45,8 @@ class Handler extends ExceptionHandler
         $this->renderable(\ProtoneMedia\Splade\SpladeCore::exceptionHandler($this));
 
         $this->reportable(function (Throwable $e) {
-            if (app()->bound('sentry')) {
-                app('sentry')->captureException($e);
+            if (app()->bound('honeybadger')) {
+                app('honeybadger')->notify($e, app('request'));
             }
         });
     }
