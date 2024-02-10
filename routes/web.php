@@ -77,7 +77,7 @@ Route::middleware('splade')->group(function () use ($authMiddleware) {
     // Registers routes to support password confirmation in Form and Link components...
     Route::spladePasswordConfirmation();
 
-    Route::view('/', 'welcome');
+    Route::redirect('/', '/dashboard');
 
     Route::middleware($authMiddleware)->group(function () {
         Route::view('/no-subscription', 'no-subscription')->name('no-subscription')->withoutMiddleware(VerifySubscriptionStatus::class);
