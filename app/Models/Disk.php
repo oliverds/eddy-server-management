@@ -105,6 +105,14 @@ class Disk extends Model
         $config['driver'] = $this->filesystem_driver->value;
         $config['throw'] = true;
 
+        if ($this->filesystem_driver === FilesystemDriver::S3) {
+            $config['key'] = $config['access_key'];
+            $config['secret'] = $config['secret_key'];
+            $config['use_path_style_endpoint'] = $config['path_style_endpoint'];
+
+            unset($config['access_key'], $config['secret_key'], $config['path_style_endpoint']);
+        }
+
         return $config;
     }
 }
