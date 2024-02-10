@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure;
 
+use App\Infrastructure\Entities\Architecture;
 use App\Infrastructure\Entities\Distribution;
 use App\Infrastructure\Entities\OperatingSystem;
 use App\Infrastructure\Entities\Region;
@@ -117,6 +118,7 @@ class HetznerCloud implements ServerProvider, HasCredentials
             $serverType['disk'],
             ! is_null($monthlyPriceAmount) ? (int) ($monthlyPriceAmount * 100) : null,
             'EUR',
+            $serverType['architecture'],
         );
     }
 
@@ -134,7 +136,7 @@ class HetznerCloud implements ServerProvider, HasCredentials
         $supportedServerTypes = $datacenter->json('datacenter.server_types.supported');
 
         return $this->getAll('server_types')
-            ->where('architecture', 'x86')
+            ->whereIn('architecture', ['x86', 'arm'])
             ->whereIn('id', $availableServerTypes)
             ->whereIn('id', $supportedServerTypes)
             ->map(fn (array $serverType) => $this->mapServerType($serverType, $datacenterName))
@@ -163,7 +165,12 @@ class HetznerCloud implements ServerProvider, HasCredentials
             default => OperatingSystem::Unknown,
         };
 
-        return new Entities\Image((string) $image['id'], $distribution, $operatingSystem);
+        $architecture = match ($image['architecture']) {
+            'arm' => Architecture::Arm,
+            default => Architecture::X86,
+        };
+
+        return new Entities\Image((string) $image['id'], $distribution, $operatingSystem, $architecture);
     }
 
     /**
@@ -174,10 +181,9 @@ class HetznerCloud implements ServerProvider, HasCredentials
     public function findAvailableServerImagesByRegion(string $regionId): Collection
     {
         return $this->getAll('images', [
-            'architecture' => 'x86',
             'status' => 'available',
             'type' => 'system',
-        ])->map([$this, 'mapImage']);
+        ])->whereIn('architecture', ['x86', 'arm'])->map([$this, 'mapImage']);
     }
 
     /**

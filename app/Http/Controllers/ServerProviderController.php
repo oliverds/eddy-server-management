@@ -53,7 +53,13 @@ class ServerProviderController extends Controller
                 return $image->operatingSystem === OperatingSystem::Ubuntu2204;
             })
             ->mapWithKeys(function (Image $image) {
-                return [$image->id => 'Ubuntu 22.04'];
+                $name = 'Ubuntu 22.04';
+
+                if ($image->architecture) {
+                    $name .= ' (' . str()->of($image->architecture->value)->upper() . ')';
+                }
+
+                return [$image->id => $name];
             });
     }
 }

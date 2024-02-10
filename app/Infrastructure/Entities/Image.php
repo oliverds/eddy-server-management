@@ -8,6 +8,7 @@ class Image
         public readonly string $id,
         public readonly Distribution $distribution,
         public readonly OperatingSystem $operatingSystem,
+        public readonly ?Architecture $architecture = null,
     ) {
     }
 }
