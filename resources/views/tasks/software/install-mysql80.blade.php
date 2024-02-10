@@ -4,9 +4,11 @@ echo "Install MySQL 8.0"
 
 waitForAptUnlock
 
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
+
 # https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#apt-repo-fresh-install
-wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
-dpkg --install mysql-apt-config_0.8.24-1_all.deb
+# wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
+# dpkg --install mysql-apt-config_0.8.24-1_all.deb
 
 waitForAptUnlock
 apt-get update
@@ -18,7 +20,7 @@ debconf-set-selections <<< "mysql-community-server mysql-community-server/root-p
 debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password {{ $server->database_password }}"
 
 # Install from mysql.com to prevent installing older 5.7.x stuff
-apt-get install -y mysql-community-server
+# apt-get install -y mysql-community-server
 apt-get install -y mysql-server
 
 echo "default_password_lifetime = 0" >> /etc/mysql/mysql.conf.d/mysqld.cnf
@@ -52,4 +54,4 @@ mysql --user="root" --password="{{ $server->database_password }}" -e "CREATE DAT
 
 service mysql restart
 
-rm mysql-apt-config_0.8.24-1_all.deb
+# rm mysql-apt-config_0.8.24-1_all.deb
