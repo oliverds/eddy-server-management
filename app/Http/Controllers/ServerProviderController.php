@@ -56,7 +56,7 @@ class ServerProviderController extends Controller
                 $name = 'Ubuntu 22.04';
 
                 if ($image->architecture) {
-                    $name .= ' (' . str()->of($image->architecture->value)->upper() . ')';
+                    $name .= ' ('.str()->of($image->architecture->value)->upper().')';
                 }
 
                 return [$image->id => $name];

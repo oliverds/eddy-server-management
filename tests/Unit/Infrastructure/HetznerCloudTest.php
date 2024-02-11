@@ -364,7 +364,7 @@ class HetznerCloudTest extends TestCase
     {
         Http::fake([
             'https://api.hetzner.cloud/v1/datacenters/1' => [
-                'datacenter' => ['location' => ['id' => 1]]
+                'datacenter' => ['location' => ['id' => 1]],
             ],
         ]);
 

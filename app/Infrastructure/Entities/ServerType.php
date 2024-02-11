@@ -2,10 +2,9 @@
 
 namespace App\Infrastructure\Entities;
 
-use Money\Money;
 use Money\Currency;
-use Illuminate\Support\Str;
 use Money\Formatter\IntlMoneyFormatter;
+use Money\Money;
 
 class ServerType
 {
@@ -26,7 +25,7 @@ class ServerType
         $name = "{$this->id}: {$this->cpuCores} CPU, {$memoryInGb} GB RAM, {$this->storageInGb} GB";
 
         if ($architecture) {
-            $name .= ', ' . str()->of($this->architecture)->upper();
+            $name .= ', '.str()->of($this->architecture)->upper();
         }
 
         if ($monthlyPriceAmount && $monthlyPriceCurrency) {
