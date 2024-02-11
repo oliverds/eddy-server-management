@@ -312,9 +312,11 @@ echo "Install MySQL 8.0"
 
 waitForAptUnlock
 
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
+
 # https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#apt-repo-fresh-install
-wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
-dpkg --install mysql-apt-config_0.8.24-1_all.deb
+# wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
+# dpkg --install mysql-apt-config_0.8.24-1_all.deb
 
 waitForAptUnlock
 apt-get update
@@ -326,7 +328,7 @@ debconf-set-selections <<< "mysql-community-server mysql-community-server/root-p
 debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password password"
 
 # Install from mysql.com to prevent installing older 5.7.x stuff
-apt-get install -y mysql-community-server
+# apt-get install -y mysql-community-server
 apt-get install -y mysql-server
 
 echo "default_password_lifetime = 0" >> /etc/mysql/mysql.conf.d/mysqld.cnf
@@ -360,7 +362,8 @@ mysql --user="root" --password="password" -e "CREATE DATABASE eddy CHARACTER SET
 
 service mysql restart
 
-rm mysql-apt-config_0.8.24-1_all.deb
+# rm mysql-apt-config_0.8.24-1_all.deb
+
 httpPostSilently https://webhook.app/webhook/task/1/callback?signature=852aa54b2322ab416c8f5118b9cdf2f2bd623a23ba6f953e8d966ddf20ed649e '{"software_installed":"mysql80"}'
 echo "Install Redis"
 
