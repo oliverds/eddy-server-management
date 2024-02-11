@@ -130,6 +130,32 @@ class HetznerCloudTest extends TestCase
                     ],
                     [
                         'id' => 2,
+                        'name' => 'cax11',
+                        'description' => 'CAX11',
+                        'cores' => 2,
+                        'memory' => 4.0,
+                        'disk' => 40,
+                        'deprecated' => null,
+                        'prices' => [
+                            [
+                                'location' => 'fsn1',
+                                'price_monthly' => [
+                                    'net' => '1.7700000000',
+                                ],
+                            ],
+                            [
+                                'location' => 'nbg1',
+                                'price_monthly' => [
+                                    'net' => '3.2900000000',
+                                ],
+                            ],
+                        ],
+                        'storage_type' => 'local',
+                        'cpu_type' => 'shared',
+                        'architecture' => 'arm',
+                    ],
+                    [
+                        'id' => 3,
                         'name' => 'cx11',
                         'description' => 'CX11',
                         'cores' => 1,
@@ -155,10 +181,6 @@ class HetznerCloudTest extends TestCase
                         'architecture' => 'x86',
                     ],
                     [
-                        'id' => 3,
-                        'architecture' => 'arm',
-                    ],
-                    [
                         'id' => 4,
                         'architecture' => 'x86',
                     ],
@@ -168,19 +190,30 @@ class HetznerCloudTest extends TestCase
 
         $serverTypes = (new HetznerCloud(''))->findAvailableServerTypesByRegion('1');
 
-        $this->assertCount(1, $serverTypes);
+        $this->assertCount(2, $serverTypes);
 
         /** @var ServerType $serverType */
         $serverType = $serverTypes->first();
 
-        $this->assertEquals('cx11', $serverType->id);
-        $this->assertEquals(1, $serverType->cpuCores);
-        $this->assertEquals(2048, $serverType->memoryInMb);
-        $this->assertEquals(20, $serverType->storageInGb);
-        $this->assertEquals('cx11: 1 CPU, 2 GB RAM, 20 GB (€3.29/month)', $serverType->name);
+        $this->assertEquals('cax11', $serverType->id);
+        $this->assertEquals(2, $serverType->cpuCores);
+        $this->assertEquals(4096, $serverType->memoryInMb);
+        $this->assertEquals(40, $serverType->storageInGb);
+        $this->assertEquals('cax11: 2 CPU, 4 GB RAM, 40 GB, ARM (€3.29/month)', $serverType->name);
 
         $this->assertEquals(329, $serverType->monthlyPriceAmount);
         $this->assertEquals('EUR', $serverType->monthlyPriceCurrency);
+
+        $secondServerType = $serverTypes->skip(1)->first();
+
+        $this->assertEquals('cx11', $secondServerType->id);
+        $this->assertEquals(1, $secondServerType->cpuCores);
+        $this->assertEquals(2048, $secondServerType->memoryInMb);
+        $this->assertEquals(20, $secondServerType->storageInGb);
+        $this->assertEquals('cx11: 1 CPU, 2 GB RAM, 20 GB, X86 (€3.29/month)', $secondServerType->name);
+
+        $this->assertEquals(329, $secondServerType->monthlyPriceAmount);
+        $this->assertEquals('EUR', $secondServerType->monthlyPriceCurrency);
     }
 
     /** @test */
@@ -210,6 +243,28 @@ class HetznerCloudTest extends TestCase
                 'architecture' => 'x86',
             ],
             [
+                'id' => 67794389,
+                'type' => 'system',
+                'status' => 'available',
+                'name' => 'ubuntu-22.04',
+                'description' => 'Ubuntu 22.04',
+                'image_size' => null,
+                'disk_size' => 5,
+                'created' => '2022-04-21T13:32:38+00:00',
+                'created_from' => null,
+                'bound_to' => null,
+                'os_flavor' => 'ubuntu',
+                'os_version' => '22.04',
+                'rapid_deploy' => true,
+                'protection' => [
+                    'delete' => false,
+                ],
+                'deprecated' => null,
+                'labels' => [],
+                'deleted' => null,
+                'architecture' => 'arm',
+            ],
+            [
                 'id' => 67794396,
                 'type' => 'system',
                 'status' => 'available',
@@ -234,7 +289,7 @@ class HetznerCloudTest extends TestCase
         ];
 
         Http::fake([
-            'https://api.hetzner.cloud/v1/images?architecture=x86&status=available&type=system' => [
+            'https://api.hetzner.cloud/v1/images?status=available&type=system' => [
                 'images' => $images,
 
             ],
@@ -242,7 +297,7 @@ class HetznerCloudTest extends TestCase
 
         $images = (new HetznerCloud(''))->findAvailableServerImagesByRegion('2');
 
-        $this->assertCount(2, $images);
+        $this->assertCount(3, $images);
 
         /** @var Image $cent */
         $cent = $images->first();
@@ -308,6 +363,12 @@ class HetznerCloudTest extends TestCase
     public function it_can_create_server()
     {
         Http::fake([
+            'https://api.hetzner.cloud/v1/datacenters/1' => [
+                'datacenter' => ['location' => ['id' => 1]]
+            ],
+        ]);
+
+        Http::fake([
             'https://api.hetzner.cloud/v1/servers' => function (Request $request) {
                 $this->assertEquals('my-server', $request['name']);
                 $this->assertEquals('1', $request['location']);
@@ -360,6 +421,7 @@ class HetznerCloudTest extends TestCase
                         'id' => 67794396,
                         'os_flavor' => 'ubuntu',
                         'os_version' => '22.04',
+                        'architecture' => 'x86',
                     ],
                 ],
             ],
