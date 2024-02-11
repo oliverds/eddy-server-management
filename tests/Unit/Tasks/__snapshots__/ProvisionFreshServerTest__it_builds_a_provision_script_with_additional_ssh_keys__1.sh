@@ -556,6 +556,97 @@ service php8.2-fpm restart > /dev/null 2>&1
 echo "eddy ALL=NOPASSWD: /usr/sbin/service php8.2-fpm reload" >> /etc/sudoers.d/php-fpm
 
 httpPostSilently https://webhook.app/webhook/task/1/callback?signature=852aa54b2322ab416c8f5118b9cdf2f2bd623a23ba6f953e8d966ddf20ed649e '{"software_installed":"php82"}'
+echo "Install PHP 8.3"
+
+waitForAptUnlock
+apt-add-repository ppa:ondrej/php -y
+apt-get update
+waitForAptUnlock
+
+# confdef: If a conffile has been modified and the version in the package did change,
+# always choose the default action without prompting. If there is no default action
+# it will stop to ask the user unless --force-confnew or --force-confold is also
+# been given, in which case it will use that to decide the final action.
+
+# confold: If a conffile has been modified and the version in the package did change,
+# always keep the old version without prompting, unless the --force-confdef is also
+# specified, in which case the default action is preferred.
+
+apt-get install -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y --force-yes \
+    php8.3-bcmath \
+    php8.3-cli \
+    php8.3-curl \
+    php8.3-dev \
+    php8.3-fpm \
+    php8.3-gd \
+    php8.3-gmp \
+    php8.3-igbinary \
+    php8.3-imap \
+    php8.3-intl \
+    php8.3-mbstring \
+    php8.3-memcached \
+    php8.3-msgpack \
+    php8.3-mysql \
+    php8.3-pgsql \
+    php8.3-readline \
+    php8.3-soap \
+    php8.3-sqlite3 \
+    php8.3-swoole \
+    php8.3-tokenizer \
+    php8.3-xml \
+    php8.3-zip
+
+echo "Install Imagick for PHP 8.3"
+
+waitForAptUnlock
+echo "extension=imagick.so" > /etc/php/8.3/mods-available/imagick.ini
+yes '' | apt-get install php8.3-imagick
+
+echo "Install Redis for PHP 8.3"
+
+waitForAptUnlock
+yes '' | apt-get install php8.3-redis
+
+# https://github.com/deployphp/deployer/blob/master/recipe/provision/php.php
+
+echo "Update PHP CLI config"
+
+sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/php.ini
+sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.3/cli/php.ini
+sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.3/cli/php.ini
+sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.3/cli/php.ini
+sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.3/cli/php.ini
+
+echo "Update PHP FPM config"
+
+sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/fpm/php.ini
+sed -i "s/display_errors = .*/display_errors = Off/" /etc/php/8.3/fpm/php.ini
+sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.3/fpm/php.ini
+sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.3/fpm/php.ini
+sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.3/fpm/php.ini
+
+echo "Update PHP FPM pool config"
+
+sed -i "s/;request_terminate_timeout.*/request_terminate_timeout = 60/" /etc/php/8.3/fpm/pool.d/www.conf
+sed -i "s/^user = www-data/user = eddy/" /etc/php/8.3/fpm/pool.d/www.conf
+sed -i "s/^group = www-data/group = eddy/" /etc/php/8.3/fpm/pool.d/www.conf
+sed -i "s/;listen\.owner.*/listen.owner = eddy/" /etc/php/8.3/fpm/pool.d/www.conf
+sed -i "s/;listen\.group.*/listen.group = eddy/" /etc/php/8.3/fpm/pool.d/www.conf
+sed -i "s/;listen\.mode.*/listen.mode = 0666/" /etc/php/8.3/fpm/pool.d/www.conf
+sed -i "s/^pm.max_children.*=.*/pm.max_children = 5/" /etc/php/8.3/fpm/pool.d/www.conf
+
+echo "Update PHP session config"
+
+#
+chmod 733 /var/lib/php/sessions
+
+# Set the sticky bit on the directory to prevent other users from deleting the session files
+chmod +t /var/lib/php/sessions
+service php8.3-fpm restart > /dev/null 2>&1
+
+echo "eddy ALL=NOPASSWD: /usr/sbin/service php8.3-fpm reload" >> /etc/sudoers.d/php-fpm
+
+httpPostSilently https://webhook.app/webhook/task/1/callback?signature=852aa54b2322ab416c8f5118b9cdf2f2bd623a23ba6f953e8d966ddf20ed649e '{"software_installed":"php83"}'
 echo "Download and install Composer dependency manager"
 
 curl -sS https://getcomposer.org/installer | php -- --2

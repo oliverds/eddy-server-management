@@ -49,7 +49,7 @@ enum Software: string
             self::Node18 => 'Node 18',
             self::Php81 => 'PHP 8.1',
             self::Php82 => 'PHP 8.2',
-            self::Php82 => 'PHP 8.3',
+            self::Php83 => 'PHP 8.3',
             self::Redis6 => 'Redis 6',
         };
     }

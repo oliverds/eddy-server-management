@@ -17,6 +17,7 @@ class SoftwareTest extends TestCase
             Software::Redis6,
             Software::Php81,
             Software::Php82,
+            Software::Php83,
             Software::Composer2,
             Software::Node18,
         ];
@@ -32,6 +33,7 @@ class SoftwareTest extends TestCase
         $this->assertEquals('Node 18', Software::Node18->getDisplayName());
         $this->assertEquals('PHP 8.1', Software::Php81->getDisplayName());
         $this->assertEquals('PHP 8.2', Software::Php82->getDisplayName());
+        $this->assertEquals('PHP 8.3', Software::Php83->getDisplayName());
         $this->assertEquals('Redis 6', Software::Redis6->getDisplayName());
     }
 
@@ -42,6 +44,7 @@ class SoftwareTest extends TestCase
         $this->assertEquals(\App\Tasks\RestartMySql::class, Software::MySql80->restartTaskClass());
         $this->assertEquals(\App\Tasks\RestartPhp81::class, Software::Php81->restartTaskClass());
         $this->assertEquals(\App\Tasks\RestartPhp82::class, Software::Php82->restartTaskClass());
+        $this->assertEquals(\App\Tasks\RestartPhp83::class, Software::Php83->restartTaskClass());
         $this->assertEquals(\App\Tasks\RestartRedis::class, Software::Redis6->restartTaskClass());
         $this->assertNull(Software::Composer2->restartTaskClass());
     }
@@ -51,6 +54,7 @@ class SoftwareTest extends TestCase
     {
         $this->assertEquals(PhpVersion::Php81, Software::Php81->findPhpVersion());
         $this->assertEquals(PhpVersion::Php82, Software::Php82->findPhpVersion());
+        $this->assertEquals(PhpVersion::Php83, Software::Php83->findPhpVersion());
         $this->assertNull(Software::Caddy2->findPhpVersion());
     }
 }
